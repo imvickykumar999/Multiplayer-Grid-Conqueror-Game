@@ -2,13 +2,13 @@ import socket
 import tkinter as tk
 import json
 
-# # local server configuration
-SERVER_IP = '127.0.0.1'
-SERVER_PORT = 8080
+# # Local or playit.gg
+# SERVER_IP = '127.0.0.1'  # Replace if using playit.gg
+# SERVER_PORT = 8080
 
-# playit.gg server configuration
-# SERVER_IP = 'provided-stayed.gl.at.ply.gg'  # Public hostname from playit.gg
-# SERVER_PORT = 65002                           # Public port from playit.gg
+# playit.gg configuration
+SERVER_IP = 'provided-stayed.gl.at.ply.gg'  # Public hostname from playit.gg
+SERVER_PORT = 65002                           # Public port from playit.gg
 
 GRID_SIZE = 10
 CELL_SIZE = 40
@@ -27,9 +27,14 @@ class GameClient:
         self.my_id = None
         self.player_boxes = {}
         self.colors = {}
+        self.game_over = False
 
         self.winner_label = tk.Label(master, text="", font=("Arial", 14))
         self.winner_label.pack(pady=5)
+
+        self.restart_button = tk.Button(master, text="Play Again", font=("Arial", 12), command=self.restart_game)
+        self.restart_button.pack(pady=5)
+        self.restart_button.pack_forget()
 
         master.bind('<Up>', lambda e: self.send_command("MOVE UP"))
         master.bind('<Down>', lambda e: self.send_command("MOVE DOWN"))
@@ -40,6 +45,9 @@ class GameClient:
         self.poll_updates()
 
     def send_command(self, command):
+        if self.game_over and command.startswith("MOVE"):
+            return
+
         try:
             self.sock.sendall(command.encode())
             data = self.sock.recv(4096).decode()
@@ -52,6 +60,13 @@ class GameClient:
         self.send_command("PING")
         self.master.after(500, self.poll_updates)
 
+    def restart_game(self):
+        self.restart_button.pack_forget()
+        self.winner_label.config(text="")
+        self.my_id = None
+        self.game_over = False
+        self.send_command("RESTART")
+
     def update_display(self, state):
         if self.my_id is None and "your_id" in state:
             self.my_id = state["your_id"]
@@ -60,7 +75,6 @@ class GameClient:
         self.canvas.delete("all")
         self.draw_grid()
 
-        # Draw claimed tiles
         for coord, owner in state["claimed"].items():
             x, y = map(int, coord.split(','))
             color = self.get_color(owner)
@@ -70,7 +84,6 @@ class GameClient:
                 fill=color, outline="black"
             )
 
-        # Draw player positions
         for pid, (x, y) in state["players"].items():
             self.canvas.create_rectangle(
                 x * CELL_SIZE + 10, y * CELL_SIZE + 10,
@@ -78,12 +91,13 @@ class GameClient:
                 fill=self.get_color(pid), outline="black"
             )
 
-        # Show winner
         if state["winner"]:
+            self.game_over = True
             if state["winner"] == self.my_id:
-                self.winner_label.config(text="YOU WIN!")
+                self.winner_label.config(text="🎉 YOU WIN!")
             else:
-                self.winner_label.config(text="YOU LOSE!")
+                self.winner_label.config(text="❌ YOU LOSE!")
+            self.restart_button.pack()
 
     def draw_grid(self):
         for i in range(GRID_SIZE + 1):

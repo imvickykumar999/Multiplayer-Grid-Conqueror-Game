@@ -15,8 +15,9 @@ def handle_client(conn, addr):
     player_id = str(addr[1])
 
     with lock:
-        players[addr] = (0, 0)
-        claimed_tiles[(0, 0)] = player_id
+        if addr not in players:
+            players[addr] = (0, 0)
+            claimed_tiles[(0, 0)] = player_id
 
     with conn:
         while True:
@@ -38,13 +39,20 @@ def handle_client(conn, addr):
                         x = max(0, x - 1)
                     elif command == "MOVE RIGHT":
                         x = min(GRID_SIZE - 1, x + 1)
+                    elif command == "RESTART" and is_game_over():
+                        print("[SERVER] Game restarted by", player_id)
+                        players.clear()
+                        claimed_tiles.clear()
+                        players[addr] = (0, 0)
+                        claimed_tiles[(0, 0)] = player_id
+                        x, y = 0, 0
 
                     players[addr] = (x, y)
                     claimed_tiles.setdefault((x, y), player_id)
 
                     # Build game state
                     state = {
-                        "your_id": player_id,  # ← Add this!
+                        "your_id": player_id,
                         "players": {str(a[1]): pos for a, pos in players.items()},
                         "claimed": {f"{k[0]},{k[1]}": v for k, v in claimed_tiles.items()},
                         "winner": get_winner() if is_game_over() else None
