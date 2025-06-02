@@ -2,8 +2,13 @@ import socket
 import tkinter as tk
 import json
 
+# # local server configuration
 SERVER_IP = '127.0.0.1'
 SERVER_PORT = 8080
+
+# playit.gg server configuration
+# SERVER_IP = 'provided-stayed.gl.at.ply.gg'  # Public hostname from playit.gg
+# SERVER_PORT = 65002                           # Public port from playit.gg
 
 GRID_SIZE = 10
 CELL_SIZE = 40
