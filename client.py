@@ -2,24 +2,17 @@ import socket
 import tkinter as tk
 import json
 
-# # Local or playit.gg
-# SERVER_IP = '127.0.0.1'  # Replace if using playit.gg
-# SERVER_PORT = 8080
-
-# playit.gg configuration
-SERVER_IP = 'provided-stayed.gl.at.ply.gg'  # Public hostname from playit.gg
-SERVER_PORT = 65002                           # Public port from playit.gg
-
 GRID_SIZE = 10
 CELL_SIZE = 40
 
+
 class GameClient:
-    def __init__(self, master):
+    def __init__(self, master, server_ip, server_port):
         self.master = master
         master.title("Grid Conqueror")
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((SERVER_IP, SERVER_PORT))
+        self.sock.connect((server_ip, server_port))
 
         self.canvas = tk.Canvas(master, width=GRID_SIZE * CELL_SIZE, height=GRID_SIZE * CELL_SIZE, bg="white")
         self.canvas.pack()
@@ -47,7 +40,6 @@ class GameClient:
     def send_command(self, command):
         if self.game_over and command.startswith("MOVE"):
             return
-
         try:
             self.sock.sendall(command.encode())
             data = self.sock.recv(4096).decode()
@@ -113,8 +105,40 @@ class GameClient:
     def close(self):
         self.sock.close()
 
-if __name__ == "__main__":
+
+def launch_connection_window():
+    def connect():
+        ip = ip_entry.get()
+        port = port_entry.get()
+        try:
+            port = int(port)
+            root.destroy()
+            game_root = tk.Tk()
+            client = GameClient(game_root, ip, port)
+            game_root.protocol("WM_DELETE_WINDOW", lambda: (client.close(), game_root.destroy()))
+            game_root.mainloop()
+        except Exception as e:
+            error_label.config(text=f"Error: {e}")
+
     root = tk.Tk()
-    client = GameClient(root)
-    root.protocol("WM_DELETE_WINDOW", lambda: (client.close(), root.destroy()))
+    root.title("Connect to Server")
+
+    tk.Label(root, text="Server IP:").pack(pady=2)
+    ip_entry = tk.Entry(root)
+    ip_entry.insert(0, "provided-stayed.gl.at.ply.gg")  # Default IP 127.0.0.1
+    ip_entry.pack(pady=2)
+
+    tk.Label(root, text="Server Port:").pack(pady=2)
+    port_entry = tk.Entry(root)
+    port_entry.insert(0, "65002")  # Default port 8080
+    port_entry.pack(pady=2)
+
+    tk.Button(root, text="Connect", command=connect).pack(pady=5)
+    error_label = tk.Label(root, text="", fg="red")
+    error_label.pack()
+
     root.mainloop()
+
+
+if __name__ == "__main__":
+    launch_connection_window()
