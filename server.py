@@ -6,7 +6,7 @@ from tkinter import filedialog
 import csv
 
 HOST = '0.0.0.0'
-PORT = 8080
+PORT = 8000
 GRID_SIZE = 10
 
 players = {}  # {addr: (x, y)}
@@ -145,3 +145,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

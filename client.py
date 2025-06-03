@@ -125,12 +125,12 @@ def launch_connection_window():
 
     tk.Label(root, text="Server IP:").pack(pady=2)
     ip_entry = tk.Entry(root)
-    ip_entry.insert(0, "provided-stayed.gl.at.ply.gg")  # Default IP 127.0.0.1
+    ip_entry.insert(0, "february-exactly.gl.at.ply.gg")  # Default IP 127.0.0.1
     ip_entry.pack(pady=2)
 
     tk.Label(root, text="Server Port:").pack(pady=2)
     port_entry = tk.Entry(root)
-    port_entry.insert(0, "65002")  # Default port 8080
+    port_entry.insert(0, "5892")  # Default port 8000
     port_entry.pack(pady=2)
 
     tk.Button(root, text="Connect", command=connect).pack(pady=5)
@@ -142,3 +142,4 @@ def launch_connection_window():
 
 if __name__ == "__main__":
     launch_connection_window()
+
